@@ -1,42 +1,61 @@
 import puppeteer from 'puppeteer';
 import { writeFileSync, existsSync, readFileSync } from 'fs';
-import { faker } from '@faker-js/faker';
-import { generate } from 'gerador-validador-cpf';
+
+const safeText = (text) => (text && typeof text === 'string') ? text : (text && typeof text === 'number' ? text.toString() : '');
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: 'new' });
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   const targetUrl = 'https://joaoemiliioleiloeiro.com';
+  const forDevsUrl = 'https://www.4devs.com.br/gerador_de_pessoas';
 
-  await page.goto( `${targetUrl}/auth/register`, { waitUntil: 'networkidle2' });
+  await page.goto(forDevsUrl, { waitUntil: 'networkidle2' });
 
-  // Aguardar o elemento antes de interagir
-  await page.waitForSelector('input[name="nome"]', { timeout: 20000 });
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  await page.click('#bt_gerar_pessoa');
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  await page.waitForSelector('#btn_json_tab', { timeout: 3000 });
+  await page.click('#btn_json_tab');
+  await new Promise(resolve => setTimeout(resolve, 2000));
 
-  // Gerar dados fictícios
+  await page.waitForSelector('#dados_json', { timeout: 3000 });
+
+  const jsonData = await page.$eval('#dados_json', (textarea) => {
+    return JSON.parse(textarea.value);
+  });
+
+  console.log(jsonData);
+
   const cadastro = {
     target: targetUrl,
-    nome: faker.person.fullName(),
-    email: faker.internet.email(),
+    nome: safeText(jsonData[0].nome),
+    email: safeText(jsonData[0].email),
     senha: 'SenhaSegura123!',
-    cpf: generate(),
-    data_nascimento: '1990-01-01',
-    celular: faker.phone.number('(##) 9####-####'),
-    cep: faker.location.zipCode(),
-    rua: faker.location.street(),
-    n_casa: faker.number.int({ min: 1, max: 9999 }).toString(),
-    bairro: faker.location.secondaryAddress(),
-    cidade: faker.location.city(),
-    estado: faker.location.state({ abbreviated: true }),
-    complemento: faker.location.direction(),
+    cpf: safeText(jsonData[0].cpf),
+    data_nascimento: safeText(jsonData[0].data_nasc),
+    celular: safeText(jsonData[0].celular),
+    cep: safeText(jsonData[0].cep),
+    rua: safeText(jsonData[0].endereco),
+    n_casa: safeText(jsonData[0].numero),
+    bairro: safeText(jsonData[0].bairro),
+    cidade: safeText(jsonData[0].cidade),
+    estado: safeText(jsonData[0].estado),
+    complemento: safeText(jsonData[0].complemento),
     redesocial: 'google',
     novidades_whatsapp: true,
     novidades_email: true,
     termos: true
   };
 
-  // Preencher formulário
+  console.log(cadastro);
+
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  await page.goto(`${targetUrl}/auth/register`, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('input[name="nome"]', { timeout: 3000 });
+
   await page.type('input[name="nome"]', cadastro.nome);
   await page.type('input[name="email"]', cadastro.email);
   await page.type('input[name="emailConfirmacao"]', cadastro.email);
@@ -58,11 +77,7 @@ import { generate } from 'gerador-validador-cpf';
   // await page.click('input[name="novidades_email"]');
   // await page.click('input[name="termos"]');
 
-  // Aguardar um tempo extra após o carregamento
-  // Substituir waitForTimeout() deprecado
-  await new Promise(resolve => setTimeout(resolve, 2000));  
-
-  // Clicar no botão de envio
+  // Enviar formulário
   await page.click('button[type="submit"]');
 
   // Esperar pela resposta do cadastro
@@ -70,25 +85,15 @@ import { generate } from 'gerador-validador-cpf';
     console.log('Cadastro concluído com sucesso. #handless');
   });
 
-  // Caminho do arquivo JSON
   const filePath = 'public/cadastro.json';
 
-  // Verificar se o arquivo existe
   if (existsSync(filePath)) {
-    // Ler dados existentes
     const existingData = JSON.parse(readFileSync(filePath, 'utf-8'));
-    // Adicionar novo cadastro
     existingData.push(cadastro);
-    // Escrever de volta no arquivo
     writeFileSync(filePath, JSON.stringify(existingData, null, 2));
   } else {
-    // Se o arquivo não existir, criar um novo com o cadastro
     writeFileSync(filePath, JSON.stringify([cadastro], null, 2));
   }
-
-  // Aguardar um tempo extra após o carregamento
-  // Substituir waitForTimeout() deprecado
-  await new Promise(resolve => setTimeout(resolve, 4000));
 
   await browser.close();
 })();

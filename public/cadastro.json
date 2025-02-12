@@ -178,5 +178,25 @@
     "novidades_whatsapp": true,
     "novidades_email": true,
     "termos": true
+  },
+  {
+    "target": "https://joaoemiliioleiloeiro.com",
+    "nome": "Julio Tomás Mendes",
+    "email": "julio-mendes73@franciscofilho.adv.br",
+    "senha": "SenhaSegura123!",
+    "cpf": "798.125.875-86",
+    "data_nascimento": "24/01/1998",
+    "celular": "(69) 99939-3781",
+    "cep": "76870-240",
+    "rua": "Avenida Canaã",
+    "n_casa": "513",
+    "bairro": "Áreas Especiais",
+    "cidade": "Ariquemes",
+    "estado": "RO",
+    "complemento": "",
+    "redesocial": "google",
+    "novidades_whatsapp": true,
+    "novidades_email": true,
+    "termos": true
   }
 ]
